@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-Akshare 框架测试脚本
+Akshare 框架测试脚本 by liziang
 用于测试akshare库的基本功能
 """
 
