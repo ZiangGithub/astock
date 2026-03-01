@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-Akshare 框架测试脚本 by liziang
+Akshare 框架测试脚本
 用于测试akshare库的基本功能
 """
 
@@ -47,10 +47,12 @@ def test_stock_realtime():
     print("=" * 50)
 
     try:
-        # 获取实时行情（单只股票）
+        # 获取实时行情（全部A股）
         stock_zh_a_spot_em = ak.stock_zh_a_spot_em()
         print(f"获取到 {len(stock_zh_a_spot_em)} 只股票实时行情")
-        print(stock_zh_a_spot_em.head(10)[['代码', '名称', '最新价', '涨跌幅']])
+        # 选择存在的列
+        cols = [c for c in ['代码', '名称', '最新价', '涨跌幅', '代码-市场'] if c in stock_zh_a_spot_em.columns]
+        print(stock_zh_a_spot_em[cols].head(10))
     except Exception as e:
         print(f"获取实时行情失败: {e}")
 
@@ -58,14 +60,14 @@ def test_stock_realtime():
 def test_stock_fund_flow():
     """测试资金流向"""
     print("\n" + "=" * 50)
-    print("测试4: 获取资金流向")
+    print("测试4: 获取个股资金流向")
     print("=" * 50)
 
     try:
-        # 获取今日资金流向
-        stock_fund_flow_statistics_df = ak.stock_fund_flow_statistics(symbol="今日")
-        print(f"获取到 {len(stock_fund_flow_statistics_df)} 条记录")
-        print(stock_fund_flow_statistics_df.head(10)[['代码', '名称', '主力净流入-净额']])
+        # 获取个股资金流向 (平安银行)
+        stock_fund_flow = ak.stock_individual_fund_flow(stock="000001", market="sz")
+        print(f"获取到 {len(stock_fund_flow)} 条记录")
+        print(stock_fund_flow.head(10))
     except Exception as e:
         print(f"获取资金流向失败: {e}")
 
@@ -77,26 +79,43 @@ def test_stock_zt_pool():
     print("=" * 50)
 
     try:
-        # 获取今日涨停板
-        stock_zt_pool_em_df = ak.stock_zt_pool_em(date=datetime.now().strftime("%Y%m%d"))
+        # 获取昨日涨停板 (避免周末数据问题)
+        yesterday = (datetime.now() - timedelta(days=1)).strftime("%Y%m%d")
+        stock_zt_pool_em_df = ak.stock_zt_pool_em(date=yesterday)
         print(f"获取到 {len(stock_zt_pool_em_df)} 只涨停股票")
         if len(stock_zt_pool_em_df) > 0:
-            print(stock_zt_pool_em_df[['代码', '名称', '涨跌幅', '涨停原因']].head(10))
+            cols = [c for c in ['代码', '名称', '涨跌幅', '连板数', '首次封板时间'] if c in stock_zt_pool_em_df.columns]
+            print(stock_zt_pool_em_df[cols].head(10))
     except Exception as e:
         print(f"获取涨停板数据失败: {e}")
+
+
+def test_stock_market_fund_flow():
+    """测试市场资金流向"""
+    print("\n" + "=" * 50)
+    print("测试6: 获取市场资金流向")
+    print("=" * 50)
+
+    try:
+        # 获取市场资金流向
+        stock_market_fund_flow = ak.stock_market_fund_flow()
+        print(f"获取到 {len(stock_market_fund_flow)} 条记录")
+        print(stock_market_fund_flow.head(10))
+    except Exception as e:
+        print(f"获取市场资金流向失败: {e}")
 
 
 def test_index_info():
     """测试指数信息"""
     print("\n" + "=" * 50)
-    print("测试6: 获取指数列表")
+    print("测试7: 获取指数日线数据")
     print("=" * 50)
 
     try:
-        # 获取主要指数列表
-        index_stock_cons_sina_df = ak.index_stock_cons_sina(symbol="上证指数")
-        print(f"获取到 {len(index_stock_cons_sina_df)} 只成分股")
-        print(index_stock_cons_sina_df.head(10))
+        # 获取上证指数日线数据
+        stock_zh_index_daily_df = ak.stock_zh_index_daily(symbol="sh000001")
+        print(f"上证指数最新数据:")
+        print(stock_zh_index_daily_df.tail(3))
     except Exception as e:
         print(f"获取指数信息失败: {e}")
 
@@ -104,16 +123,46 @@ def test_index_info():
 def test_stock_industry():
     """测试行业板块"""
     print("\n" + "=" * 50)
-    print("测试7: 获取行业板块")
+    print("测试8: 获取行业板块涨跌")
     print("=" * 50)
 
     try:
         # 获取行业板块行情
         stock_board_industry_name_em_df = ak.stock_board_industry_name_em()
         print(f"获取到 {len(stock_board_industry_name_em_df)} 个行业板块")
-        print(stock_board_industry_name_em_df.head(10))
+        print(stock_board_industry_name_em_df.head(10)[['板块名称', '涨跌幅', '总市值']])
     except Exception as e:
         print(f"获取行业板块失败: {e}")
+
+
+def test_stock_concept():
+    """测试概念板块"""
+    print("\n" + "=" * 50)
+    print("测试9: 获取概念板块涨跌")
+    print("=" * 50)
+
+    try:
+        # 获取概念板块行情
+        stock_board_concept_name_em_df = ak.stock_board_concept_name_em()
+        print(f"获取到 {len(stock_board_concept_name_em_df)} 个概念板块")
+        print(stock_board_concept_name_em_df.head(10)[['板块名称', '涨跌幅', '总市值']])
+    except Exception as e:
+        print(f"获取概念板块失败: {e}")
+
+
+def test_stock_kline():
+    """测试个股K线数据"""
+    print("\n" + "=" * 50)
+    print("测试10: 获取个股K线数据")
+    print("=" * 50)
+
+    try:
+        # 获取个股K线数据 (平安银行)
+        stock_zh_a_hist_df = ak.stock_zh_a_hist(symbol="000001", period="daily", start_date="20250201", end_date="20250228")
+        print(f"获取到 {len(stock_zh_a_hist_df)} 条记录")
+        print(stock_zh_a_hist_df.tail(5))
+    except Exception as e:
+        print(f"获取K线数据失败: {e}")
 
 
 def test_version():
@@ -140,8 +189,11 @@ def main():
     test_stock_realtime()
     test_stock_fund_flow()
     test_stock_zt_pool()
+    test_stock_market_fund_flow()
     test_index_info()
     test_stock_industry()
+    test_stock_concept()
+    test_stock_kline()
 
     print("\n" + "=" * 50)
     print("测试完成!")
